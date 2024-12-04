@@ -35,7 +35,7 @@ public class client {
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (!isRunning) {
-               g.setColor(Color.WHITE);
+               g.setColor(Color.gray);
                g.setFont(new Font("Arial", Font.BOLD, 20));
                g.drawString("Press SPACE to Start", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
             } else {
@@ -48,7 +48,7 @@ public class client {
       };
 
       gamePanel.setPreferredSize(new Dimension(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE));
-      gamePanel.setBackground(Color.LIGHT_GRAY);
+      gamePanel.setBackground(Color.white);
       gamePanel.setFocusable(true);
 
       gamePanel.addKeyListener(new KeyAdapter() {
@@ -172,6 +172,11 @@ public class client {
       int rightKey;
       int rotateKey;
       int downKey;
+      private Image blueImage;
+      private Image violetImage;
+
+      private Image redImage;
+
 
       public PlayerBoard(int offsetX, int leftKey, int rightKey, int rotateKey, int downKey) {
          this.offsetX = offsetX;
@@ -179,6 +184,9 @@ public class client {
          this.rightKey = rightKey;
          this.rotateKey = rotateKey;
          this.downKey = downKey;
+         blueImage = new ImageIcon("blue.png").getImage();
+         redImage = new ImageIcon("red.png").getImage();
+         violetImage = new ImageIcon("violet.png").getImage();
 
          board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
          random = new Random();
@@ -292,20 +300,22 @@ public class client {
       }
 
       public void draw(Graphics g, int color) {
-         g.setColor(Color.magenta);
+         // 绘制已有的方块（以原样显示为图片）
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             for (int c = 0; c < BOARD_WIDTH; c++) {
                if (board[r][c]) {
-                  g.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  
+                  g.drawImage(violetImage, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
 
                }
             }
          }
-         g.setColor(color == 0 ? Color.red : Color.blue);
+   
+         // 绘制当前的方块
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  g.fillRect((pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  g.drawImage((color==0?blueImage:redImage), (pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
                }
             }
          }
