@@ -8,12 +8,18 @@ import javax.swing.*;
 public class client {
    int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 20;
-   int TILE_SIZE = 30;
+   static int TILE_SIZE = 30;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
    boolean[][] board;
    boolean isRunning; // Game state variable
+
+   //
+   static JLabel[] L;
+   static ImageIcon I;
+
+   //
 
    JPanel gamePanel;
    Socket socket;
@@ -35,7 +41,9 @@ public class client {
             } else {
                player1.draw(g, 0);
                player2.draw(g, 1);
+
             }
+
          }
       };
 
@@ -117,6 +125,14 @@ public class client {
       frame.pack();
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       frame.setVisible(true);
+
+      L = new JLabel[401];
+      for (int i = 0; i <= 400; i++) {
+         L[i] = new JLabel();
+         L[i].setBounds((i % 20) * TILE_SIZE, i / 20 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+         frame.add(L[i]);
+      }
+
    }
 
    int currentp;
@@ -178,7 +194,7 @@ public class client {
          int rando = random.nextInt(pieces.length);
          try {
             currentPiece = pieces[currentp];
-            outstream.writeInt(rando + offsetX * 5);
+            outstream.writeInt(rando);
 
          } catch (Exception e1) {
             e1.printStackTrace();
@@ -274,7 +290,8 @@ public class client {
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             for (int c = 0; c < BOARD_WIDTH; c++) {
                if (board[r][c]) {
-                  g.fillRect(offsetX + c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  g.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
                }
             }
          }
@@ -282,7 +299,7 @@ public class client {
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  g.fillRect(offsetX + (pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  g.fillRect((pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                }
             }
          }

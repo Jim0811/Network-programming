@@ -280,7 +280,7 @@ public class client2 {
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  g.fillRect(offsetX + (pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  g.fillRect(+(pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                }
             }
          }
