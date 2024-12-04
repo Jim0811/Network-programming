@@ -183,6 +183,12 @@ public class client {
          } catch (Exception e1) {
             e1.printStackTrace();
          }
+         
+         if(collides(currentPiece, pieceRow + 1, pieceCol)){
+            isRunning = false;
+            player1.resetBoard();
+            player2.resetBoard();
+         }
       }
 
       void rotatePiece() {
