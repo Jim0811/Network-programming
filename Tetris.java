@@ -3,15 +3,15 @@ import java.awt.event.*;
 import java.util.Random;
 import javax.swing.*;
 
-public class Tetris extends JPanel implements ActionListener, KeyListener {
-    private final int BOARD_WIDTH = 10;
-    private final int BOARD_HEIGHT = 20;
-    private final int TILE_SIZE = 30;
-    private Timer timer;
-    private boolean[][] board;
-    private int[][] currentPiece;
-    private int pieceRow, pieceCol;
-    private Random random;
+public final class Tetris extends JPanel implements ActionListener, KeyListener {
+    final int BOARD_WIDTH = 20;
+    final int BOARD_HEIGHT = 20;
+    final int TILE_SIZE = 30;
+    Timer timer;
+    boolean[][] board;
+    int[][] currentPiece;
+    int pieceRow, pieceCol;
+    Random random;
 
     public Tetris() {
         setPreferredSize(new Dimension(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE));
@@ -22,28 +22,46 @@ public class Tetris extends JPanel implements ActionListener, KeyListener {
         board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
         random = new Random();
         spawnNewPiece();
-        timer = new Timer(500, this);
+        timer = new Timer(250, this);
         timer.start();
     }
 
-    private void spawnNewPiece() {
+    void spawnNewPiece() {
         pieceRow = 0;
         pieceCol = BOARD_WIDTH / 2 - 1;
         currentPiece = getRandomPiece();
     }
 
-    private int[][] getRandomPiece() {
+    int[][] getRandomPiece() {
         int[][][] pieces = {
-                { { 1, 1, 1, 1 } }, // Line
-                { { 1, 1 }, { 1, 1 } }, // Square
-                { { 0, 1, 0 }, { 1, 1, 1 } }, // T
-                { { 1, 1, 0 }, { 0, 1, 1 } }, // Z
-                { { 0, 1, 1 }, { 1, 1, 0 } }, // S
+                { { 1, 1, 1, 1, 1 } },
+
+                { { 1, 1, 1 }, { 1, 0, 1 } },
+                { { 1, 1, 1 }, { 1, 1, 0 } },
+                { { 1, 1, 1 }, { 0, 1, 1 } },
+
+                { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } },
+                { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
+                { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } },
+                { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
+
+                { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } },
+                { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
+                { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } },
+
+                { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+                { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } },
+
+                { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
+                { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+
+                { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } },
+
         };
         return pieces[random.nextInt(pieces.length)];
     }
 
-    private void rotatePiece() {
+    void rotatePiece() {
         int rows = currentPiece.length;
         int cols = currentPiece[0].length;
         int[][] rotated = new int[cols][rows];
@@ -57,7 +75,14 @@ public class Tetris extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    private boolean collides(int[][] piece, int newRow, int newCol) {
+    void hardDrop() {
+        while (!collides(currentPiece, pieceRow + 1, pieceCol)) {
+            pieceRow++;
+        }
+        placePiece();
+    }
+
+    boolean collides(int[][] piece, int newRow, int newCol) {
         for (int r = 0; r < piece.length; r++) {
             for (int c = 0; c < piece[r].length; c++) {
                 if (piece[r][c] == 1) {
@@ -73,7 +98,7 @@ public class Tetris extends JPanel implements ActionListener, KeyListener {
         return false;
     }
 
-    private void placePiece() {
+    void placePiece() {
         for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                 if (currentPiece[r][c] == 1) {
@@ -85,7 +110,7 @@ public class Tetris extends JPanel implements ActionListener, KeyListener {
         spawnNewPiece();
     }
 
-    private void clearRows() {
+    void clearRows() {
         for (int r = 0; r < BOARD_HEIGHT; r++) {
             boolean fullRow = true;
             for (int c = 0; c < BOARD_WIDTH; c++) {
@@ -149,24 +174,22 @@ public class Tetris extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_LEFT -> {
                 if (!collides(currentPiece, pieceRow, pieceCol - 1)) {
                     pieceCol--;
                 }
-                break;
-            case KeyEvent.VK_RIGHT:
+            }
+            case KeyEvent.VK_RIGHT -> {
                 if (!collides(currentPiece, pieceRow, pieceCol + 1)) {
                     pieceCol++;
                 }
-                break;
-            case KeyEvent.VK_DOWN:
+            }
+            case KeyEvent.VK_DOWN -> {
                 if (!collides(currentPiece, pieceRow + 1, pieceCol)) {
-                    pieceRow++;
+                    hardDrop();
                 }
-                break;
-            case KeyEvent.VK_UP:
-                rotatePiece();
-                break;
+            }
+            case KeyEvent.VK_UP -> rotatePiece();
         }
         repaint();
     }

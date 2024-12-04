@@ -6,7 +6,7 @@ import java.util.Random;
 import javax.swing.*;
 
 public class client {
-   int BOARD_WIDTH = 10;
+   int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 20;
    int TILE_SIZE = 30;
    Timer timer;
@@ -58,7 +58,7 @@ public class client {
       });
 
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
-      player2 = new PlayerBoard(0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
+      player2 = new PlayerBoard(1, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
 
       timer = new Timer(250, e -> {
          if (isRunning) {
@@ -121,14 +121,29 @@ public class client {
 
    int currentp;
    int[][][] pieces = {
-         { { 1, 1, 1, 1 } }, // Line
-         { { 1, 1 }, { 1, 1 } }, // Square
-         { { 0, 1, 0 }, { 1, 1, 1 } }, // T
-         { { 1, 1, 0 }, { 0, 1, 1 } }, // Z
-         { { 0, 1, 1 }, { 1, 1, 0 } }, // S
-         { { 1, 1, 1 }, { 1, 0, 0 } }, // S
-         { { 1, 1, 1 }, { 0, 0, 1 } }, // S
-         { { 0, 1, 1 }, { 1, 1, 0 } }
+         { { 1, 1, 1, 1, 1 } },
+
+         { { 1, 1, 1 }, { 1, 0, 1 } },
+         { { 1, 1, 1 }, { 1, 1, 0 } },
+         { { 1, 1, 1 }, { 0, 1, 1 } },
+
+         { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } },
+         { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
+         { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } },
+         { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
+
+         { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } },
+         { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } },
+
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } },
+
+         { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
+         { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+
+         { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } },
+
    };
 
    class PlayerBoard {
@@ -151,11 +166,11 @@ public class client {
 
          board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
          random = new Random();
-         spawnNewPiece();
+         spawnNewPiece(this.offsetX);
       }
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
-      final void spawnNewPiece() {
+      final void spawnNewPiece(int offsetX) {
 
          pieceRow = 0;
          pieceCol = BOARD_WIDTH / 2 - 1;
@@ -163,7 +178,7 @@ public class client {
          int rando = random.nextInt(pieces.length);
          try {
             currentPiece = pieces[currentp];
-            outstream.writeInt(rando);
+            outstream.writeInt(rando + offsetX * 5);
 
          } catch (Exception e1) {
             e1.printStackTrace();
@@ -209,7 +224,7 @@ public class client {
             }
          }
          clearRows();
-         spawnNewPiece();
+         spawnNewPiece(offsetX);
       }
 
       void hardDrop() {
@@ -243,7 +258,7 @@ public class client {
                board[r][c] = false;
             }
          }
-         spawnNewPiece();
+         spawnNewPiece(offsetX);
       }
 
       public void update() {
