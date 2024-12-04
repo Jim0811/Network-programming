@@ -6,14 +6,20 @@ import java.util.Random;
 import javax.swing.*;
 
 public class client {
-   int BOARD_WIDTH = 10;
+   int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 20;
-   int TILE_SIZE = 30;
+   static int TILE_SIZE = 30;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
    boolean[][] board;
    boolean isRunning; // Game state variable
+
+   //
+   static JLabel[] L;
+   static ImageIcon I;
+
+   //
 
    JPanel gamePanel;
    Socket socket;
@@ -29,18 +35,20 @@ public class client {
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (!isRunning) {
-               g.setColor(Color.WHITE);
+               g.setColor(Color.gray);
                g.setFont(new Font("Arial", Font.BOLD, 20));
                g.drawString("Press SPACE to Start", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
             } else {
                player1.draw(g, 0);
                player2.draw(g, 1);
+
             }
+
          }
       };
 
       gamePanel.setPreferredSize(new Dimension(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE));
-      gamePanel.setBackground(Color.LIGHT_GRAY);
+      gamePanel.setBackground(Color.white);
       gamePanel.setFocusable(true);
 
       gamePanel.addKeyListener(new KeyAdapter() {
@@ -58,7 +66,7 @@ public class client {
       });
 
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
-      player2 = new PlayerBoard(0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
+      player2 = new PlayerBoard(1, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
 
       timer = new Timer(250, e -> {
          if (isRunning) {
@@ -117,18 +125,41 @@ public class client {
       frame.pack();
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       frame.setVisible(true);
+
+      L = new JLabel[401];
+      for (int i = 0; i <= 400; i++) {
+         L[i] = new JLabel();
+         L[i].setBounds((i % 20) * TILE_SIZE, i / 20 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+         frame.add(L[i]);
+      }
+
    }
 
    int currentp;
    int[][][] pieces = {
-         { { 1, 1, 1, 1 } }, // Line
-         { { 1, 1 }, { 1, 1 } }, // Square
-         { { 0, 1, 0 }, { 1, 1, 1 } }, // T
-         { { 1, 1, 0 }, { 0, 1, 1 } }, // Z
-         { { 0, 1, 1 }, { 1, 1, 0 } }, // S
-         { { 1, 1, 1 }, { 1, 0, 0 } }, // S
-         { { 1, 1, 1 }, { 0, 0, 1 } }, // S
-         { { 0, 1, 1 }, { 1, 1, 0 } }
+         { { 1, 1, 1, 1, 1 } },
+
+         { { 1, 1, 1 }, { 1, 0, 1 } },
+         { { 1, 1, 1 }, { 1, 1, 0 } },
+         { { 1, 1, 1 }, { 0, 1, 1 } },
+
+         { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } },
+         { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
+         { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } },
+         { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
+
+         { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } },
+         { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } },
+
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } },
+
+         { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
+         { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+
+         { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } },
+
    };
 
    class PlayerBoard {
@@ -141,6 +172,11 @@ public class client {
       int rightKey;
       int rotateKey;
       int downKey;
+      private Image blueImage;
+      private Image violetImage;
+
+      private Image redImage;
+
 
       public PlayerBoard(int offsetX, int leftKey, int rightKey, int rotateKey, int downKey) {
          this.offsetX = offsetX;
@@ -148,14 +184,17 @@ public class client {
          this.rightKey = rightKey;
          this.rotateKey = rotateKey;
          this.downKey = downKey;
+         blueImage = new ImageIcon("blue.png").getImage();
+         redImage = new ImageIcon("red.png").getImage();
+         violetImage = new ImageIcon("violet.png").getImage();
 
          board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
          random = new Random();
-         spawnNewPiece();
+         spawnNewPiece(this.offsetX);
       }
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
-      final void spawnNewPiece() {
+      final void spawnNewPiece(int offsetX) {
 
          pieceRow = 0;
          pieceCol = BOARD_WIDTH / 2 - 1;
@@ -167,6 +206,12 @@ public class client {
 
          } catch (Exception e1) {
             e1.printStackTrace();
+         }
+         
+         if(collides(currentPiece, pieceRow + 1, pieceCol)){
+            isRunning = false;
+            player1.resetBoard();
+            player2.resetBoard();
          }
       }
 
@@ -209,7 +254,7 @@ public class client {
             }
          }
          clearRows();
-         spawnNewPiece();
+         spawnNewPiece(offsetX);
       }
 
       void hardDrop() {
@@ -243,7 +288,7 @@ public class client {
                board[r][c] = false;
             }
          }
-         spawnNewPiece();
+         spawnNewPiece(offsetX);
       }
 
       public void update() {
@@ -255,19 +300,22 @@ public class client {
       }
 
       public void draw(Graphics g, int color) {
-         g.setColor(Color.magenta);
+         // 绘制已有的方块（以原样显示为图片）
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             for (int c = 0; c < BOARD_WIDTH; c++) {
                if (board[r][c]) {
-                  g.fillRect(offsetX + c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  
+                  g.drawImage(violetImage, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
+
                }
             }
          }
-         g.setColor(color == 0 ? Color.red : Color.blue);
+   
+         // 绘制当前的方块
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  g.fillRect(offsetX + (pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                  g.drawImage((color==0?blueImage:redImage), (pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
                }
             }
          }
