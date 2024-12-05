@@ -3,17 +3,22 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 import java.util.Random;
+import java.util.Vector;
 import javax.swing.*;
 
 public class client2 {
    int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 20;
-   int TILE_SIZE = 30;
+   static int TILE_SIZE = 30;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
    boolean[][] board;
    boolean isRunning; // Game state variable
+   boolean ismain;
+   //
+   static JLabel[] L;
+   static ImageIcon I;
 
    JPanel gamePanel;
    Socket socket;
@@ -22,25 +27,32 @@ public class client2 {
 
    @SuppressWarnings("CallToPrintStackTrace")
    public client2(String servername, int port) {
-      isRunning = false; // Game starts paused
+      isRunning = false;
 
       gamePanel = new JPanel() {
          @Override
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (!isRunning) {
-               g.setColor(Color.LIGHT_GRAY);
+               g.setColor(Color.gray);
                g.setFont(new Font("Arial", Font.BOLD, 20));
-               g.drawString("Press SPACE to Start", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
+               player1.draw(g, 0);
+               player2.draw(g, 1);
+               g.drawString("Press P to Pause/Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
             } else {
                player1.draw(g, 0);
                player2.draw(g, 1);
+
             }
+
+            player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
+            player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1); //
+
          }
       };
 
       gamePanel.setPreferredSize(new Dimension(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE));
-      gamePanel.setBackground(Color.WHITE);
+      gamePanel.setBackground(Color.white);
       gamePanel.setFocusable(true);
 
       gamePanel.addKeyListener(new KeyAdapter() {
@@ -58,7 +70,7 @@ public class client2 {
       });
 
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
-      player2 = new PlayerBoard(0, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
+      player2 = new PlayerBoard(1, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
 
       timer = new Timer(250, e -> {
          if (isRunning) {
@@ -78,17 +90,22 @@ public class client2 {
             while (true) {
                try {
                   int i = instream.readInt();
+                  System.out.println(i);
                   if (i == KeyEvent.VK_R) {
                      player1.resetBoard();
                      player2.resetBoard();
 
-                  } else if (i == KeyEvent.VK_SPACE) {
+                  } else if (i == KeyEvent.VK_P) {
 
                      isRunning = !isRunning;
 
-                  } else if (i < pieces.length & i >= 0) {
+                  } else if (i < pieces.length * 2 & i >= 0) {
+                     if (i < pieces.length) {
+                        player1.nextvec.add(i);
+                     } else {
+                        player2.nextvec.add(i - pieces.length);
 
-                     currentp = i;
+                     }
 
                   } else if (isRunning) {
                      player1.handleKey(i);
@@ -117,37 +134,26 @@ public class client2 {
       frame.pack();
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       frame.setVisible(true);
+
+      L = new JLabel[401];
+      for (int i = 0; i <= 400; i++) {
+         L[i] = new JLabel();
+         L[i].setBounds((i % 20) * TILE_SIZE, i / 20 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+         frame.add(L[i]);
+      }
+
    }
 
-   int currentp;
    int[][][] pieces = {
-         { { 1, 1, 1, 1, 1 } },
-
-         { { 1, 1, 1 }, { 1, 0, 1 } },
-         { { 1, 1, 1 }, { 1, 1, 0 } },
-         { { 1, 1, 1 }, { 0, 1, 1 } },
-
-         { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } },
-         { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
-         { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } },
-         { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
-
-         { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } },
-         { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
-         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } },
-
-         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
-         { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } },
-
-         { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
-         { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
-
-         { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } },
-
-   };
+         { { 1, 1, 1, 1, 1 } }, { { 1, 1, 1 }, { 1, 0, 1 } }, { { 1, 1, 1 }, { 1, 1, 0 } },
+         { { 1, 1, 1 }, { 0, 1, 1 } }, { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } }, { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
+         { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } }, { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
+         { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } }, { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } }, { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } }, { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
+         { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } }, { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } }, };
 
    class PlayerBoard {
-
       int[][] currentPiece;
       int pieceRow, pieceCol;
       int offsetX;
@@ -156,10 +162,15 @@ public class client2 {
       int rightKey;
       int rotateKey;
       int downKey;
-      private Image blueImage;
-      private Image violetImage;
+      Image blueImage;
+      Image violetImage;
+      Image redImage;
 
-      private Image redImage;
+      Vector<Integer> nextvec;
+
+      int[][] nextPiece; // Add next piece array
+
+      Image I;
 
       public PlayerBoard(int offsetX, int leftKey, int rightKey, int rotateKey, int downKey) {
          this.offsetX = offsetX;
@@ -173,27 +184,37 @@ public class client2 {
 
          board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
          random = new Random();
-         spawnNewPiece();
+
+         nextvec = new Vector<>();
+         nextvec.add(0);
+         nextvec.add(0);
+         nextvec.add(0);
+         spawnNewPiece(this.offsetX);
       }
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
-      final void spawnNewPiece() {
+      final void spawnNewPiece(int offsetX) {
 
-         int rando = random.nextInt(pieces.length);
          pieceRow = 0;
-         pieceCol = BOARD_WIDTH / 2 - 1;
+         pieceCol = BOARD_WIDTH / 2 - 5 + offsetX * 6;
+
+         int rando = random.nextInt(pieces.length) + pieces.length * offsetX;
          try {
-            currentPiece = pieces[currentp];
-            // outstream.writeInt(rando);
+            outstream.writeInt(rando);
+
          } catch (Exception e1) {
             e1.printStackTrace();
          }
-         if(collides(currentPiece, pieceRow + 1, pieceCol)){
+
+         currentPiece = pieces[nextvec.get(0)];
+         nextvec.remove(0);
+         nextPiece = pieces[nextvec.get(0)];
+
+         if (collides(currentPiece, pieceRow + 1, pieceCol)) {
             isRunning = false;
             player1.resetBoard();
             player2.resetBoard();
          }
-
       }
 
       void rotatePiece() {
@@ -235,7 +256,7 @@ public class client2 {
             }
          }
          clearRows();
-         spawnNewPiece();
+         spawnNewPiece(offsetX);
       }
 
       void hardDrop() {
@@ -269,10 +290,11 @@ public class client2 {
                board[r][c] = false;
             }
          }
-         spawnNewPiece();
+         spawnNewPiece(offsetX);
       }
 
       public void update() {
+
          if (!collides(currentPiece, pieceRow + 1, pieceCol)) {
             pieceRow++;
          } else {
@@ -280,23 +302,59 @@ public class client2 {
          }
       }
 
+      public void drawNextPiece(Graphics g, int x, int y, int color) {
+         // Draw next piece at the specified position
+         for (int r = 0; r < nextPiece.length; r++) {
+            for (int c = 0; c < nextPiece[r].length; c++) {
+               if (nextPiece[r][c] == 1) {
+                  if (color == 0) {
+                     I = new ImageIcon("bluei.png").getImage();
+                  } else {
+                     I = new ImageIcon("redi.png").getImage();
+                  }
+                  g.drawImage(I, (x + c) * TILE_SIZE, (y + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
+               }
+            }
+         }
+      }
+
       public void draw(Graphics g, int color) {
          // 绘制已有的方块（以原样显示为图片）
+
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             for (int c = 0; c < BOARD_WIDTH; c++) {
                if (board[r][c]) {
-                  
+
                   g.drawImage(violetImage, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
 
                }
             }
          }
-   
+         int ghostRow = pieceRow;
+         while (!collides(currentPiece, ghostRow + 1, pieceCol)) {
+            ghostRow++;
+         }
+
+         for (int r = 0; r < currentPiece.length; r++) {
+            for (int c = 0; c < currentPiece[r].length; c++) {
+               if (currentPiece[r][c] == 1) {
+                  if (color == 0) {
+                     I = new ImageIcon("bluei.png").getImage();
+                  } else {
+                     I = new ImageIcon("redi.png").getImage();
+                  }
+
+                  g.drawImage(I, (pieceCol + c) * TILE_SIZE, (ghostRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
+
+               }
+            }
+         }
          // 绘制当前的方块
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  g.drawImage((color==0?blueImage:redImage), (pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
+                  g.drawImage((color == 0 ? blueImage : redImage), (pieceCol + c) * TILE_SIZE,
+                        (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE, null);
                }
             }
          }
