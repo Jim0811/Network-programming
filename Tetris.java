@@ -141,15 +141,6 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // Draw the board
-        g.setColor(Color.GRAY);
-        for (int r = 0; r < BOARD_HEIGHT; r++) {
-            for (int c = 0; c < BOARD_WIDTH; c++) {
-                if (board[r][c]) {
-                    g.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                }
-            }
-        }
 
         // Draw the current piece
         g.setColor(Color.RED);
@@ -161,14 +152,6 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
             }
         }
 
-        // Draw grid lines
-        g.setColor(Color.DARK_GRAY);
-        for (int r = 0; r <= BOARD_HEIGHT; r++) {
-            g.drawLine(0, r * TILE_SIZE, BOARD_WIDTH * TILE_SIZE, r * TILE_SIZE);
-        }
-        for (int c = 0; c <= BOARD_WIDTH; c++) {
-            g.drawLine(c * TILE_SIZE, 0, c * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE);
-        }
     }
 
     @Override
