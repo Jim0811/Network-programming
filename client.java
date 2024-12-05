@@ -16,6 +16,8 @@ public class client {
    boolean[][] board;
    boolean isRunning; // Game state variable
    boolean ismain;
+   boolean isGameOver;
+   private int score=0;
    //
    static JLabel[] L;
    static ImageIcon I;
@@ -28,12 +30,34 @@ public class client {
    @SuppressWarnings("CallToPrintStackTrace")
    public client(String servername, int port) {
       isRunning = false;
-
+      isGameOver = false;
       gamePanel = new JPanel() {
          @Override
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (!isRunning) {
+            if (isGameOver) {
+               g.setColor(Color.red);
+               g.setFont(new Font("Arial", Font.BOLD, 40));
+       
+               String gameOverText = "Game Over!";
+               FontMetrics fm = g.getFontMetrics();
+               int textWidth = fm.stringWidth(gameOverText);
+               int x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               int y = (BOARD_HEIGHT * TILE_SIZE) / 2 - 30;
+               g.drawString(gameOverText, x, y);
+       
+               String scoreText = "Score: " + score;
+               textWidth = fm.stringWidth(scoreText);
+               x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               y = (BOARD_HEIGHT * TILE_SIZE) / 2 + 30;
+               g.drawString(scoreText, x, y);
+
+               String resetString = "Press R to play again";
+               textWidth = fm.stringWidth(resetString);
+               x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               y = (BOARD_HEIGHT * TILE_SIZE) / 2 + 120;
+               g.drawString(resetString, x, y);
+            } else if (!isRunning) {
                g.setColor(Color.gray);
                g.setFont(new Font("Arial", Font.BOLD, 20));
                player1.draw(g, 0);
@@ -42,7 +66,19 @@ public class client {
             } else {
                player1.draw(g, 0);
                player2.draw(g, 1);
+               player1.drawNextPiece(g, 0, 0, 0);
+               player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1);
 
+               g.setColor(Color.LIGHT_GRAY);
+               g.setFont(new Font("Arial", Font.PLAIN, 30));
+       
+               String scoreText = "Score: " + score;
+               FontMetrics fm = g.getFontMetrics();
+               int textWidth = fm.stringWidth(scoreText);
+               int x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               int y = (BOARD_HEIGHT * TILE_SIZE) / 2;
+       
+               g.drawString(scoreText, x, y);
             }
 
             player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
@@ -59,14 +95,21 @@ public class client {
          @Override
          @SuppressWarnings({ "UseSpecificCatch", "CallToPrintStackTrace" })
          public void keyPressed(KeyEvent e) {
-
             try {
-               outstream.writeInt(e.getKeyCode());
+               int keyCode = e.getKeyCode();
+               if (keyCode == KeyEvent.VK_R && isGameOver) {
+                  player1.resetBoard();
+                  player2.resetBoard();
+                  isGameOver = false;
+                  isRunning = false;
+               } else {
+                  outstream.writeInt(keyCode);
+               }
             } catch (Exception e1) {
                e1.printStackTrace();
             }
-
          }
+         
       });
 
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
@@ -194,28 +237,27 @@ public class client {
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
       final void spawnNewPiece(int offsetX) {
-
          pieceRow = 0;
          pieceCol = BOARD_WIDTH / 2 - 5 + offsetX * 6;
-
+      
          int rando = random.nextInt(pieces.length) + pieces.length * offsetX;
          try {
             outstream.writeInt(rando);
-
          } catch (Exception e1) {
             e1.printStackTrace();
          }
-
+      
          currentPiece = pieces[nextvec.get(0)];
          nextvec.remove(0);
          nextPiece = pieces[nextvec.get(0)];
-
-         if (collides(currentPiece, pieceRow + 1, pieceCol)) {
-            isRunning = false;
-            player1.resetBoard();
-            player2.resetBoard();
+      
+         // 如果新方塊出現時就已經碰撞，遊戲結束
+         if (collides(currentPiece, pieceRow, pieceCol)) {
+            isGameOver = true;
+            isRunning = false; // 停止遊戲
          }
       }
+      
 
       void rotatePiece() {
          int rows = currentPiece.length;
@@ -266,23 +308,40 @@ public class client {
          placePiece();
       }
 
-      void clearRows() {
-         for (int r = 0; r < BOARD_HEIGHT; r++) {
+      private void clearRows() {
+         int rowsCleared = 0;
+      
+         for (int r = BOARD_HEIGHT - 1; r >= 0; r--) {
             boolean fullRow = true;
+      
             for (int c = 0; c < BOARD_WIDTH; c++) {
                if (!board[r][c]) {
                   fullRow = false;
                   break;
                }
             }
+      
             if (fullRow) {
-               for (int row = r; row > 0; row--) {
-                  board[row] = board[row - 1];
+               rowsCleared++;
+               // 將該行以上的方塊下移
+               for (int r2 = r; r2 > 0; r2--) {
+                  for (int c = 0; c < BOARD_WIDTH; c++) {
+                     board[r2][c] = board[r2 - 1][c];
+                  }
                }
-               board[0] = new boolean[BOARD_WIDTH];
+               // 最上面的一行清空
+               for (int c = 0; c < BOARD_WIDTH; c++) {
+                  board[0][c] = false;
+               }
+      
+               r++; // 繼續檢查同一行，因為方塊下移後可能形成新的完整行
             }
          }
+      
+         // 根據清除的行數增加分數
+         score += rowsCleared;
       }
+      
 
       public void resetBoard() {
          for (int r = 0; r < BOARD_HEIGHT; r++) {
@@ -291,8 +350,10 @@ public class client {
             }
          }
          spawnNewPiece(offsetX);
+         isGameOver = false;
+         isRunning = false;
+         score = 0;
       }
-
       public void update() {
 
          if (!collides(currentPiece, pieceRow + 1, pieceCol)) {
