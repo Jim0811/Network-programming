@@ -15,10 +15,10 @@ public class client {
    PlayerBoard player2;
    boolean[][] board;
    boolean isRunning; // Game state variable
-   boolean ismain;
    //
    static JLabel[] L;
    static ImageIcon I;
+   static Image im;
 
    JPanel gamePanel;
    Socket socket;
@@ -34,12 +34,19 @@ public class client {
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (!isRunning) {
-               g.setColor(Color.gray);
+               g.setColor(Color.black);
                g.setFont(new Font("Arial", Font.BOLD, 20));
+
+               im = new ImageIcon("tetris.png").getImage();
+               g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
+
                player1.draw(g, 0);
                player2.draw(g, 1);
-               g.drawString("Press P to Pause/Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
+               g.drawString("  Press P to Pause / Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
             } else {
+               
+               im = new ImageIcon("tetris.png").getImage();
+               g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
                player1.draw(g, 0);
                player2.draw(g, 1);
 
@@ -151,6 +158,10 @@ public class client {
          { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } }, { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
          { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } }, { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
          { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } }, { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
+
+         { { 1, 1, 1, 1 }, { 0, 1, 0, 0 } },
+         { { 1, 1, 1, 1 }, { 0, 0, 1, 0 } },
+
          { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } }, { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } }, };
 
    class PlayerBoard {
@@ -185,7 +196,7 @@ public class client {
          board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
          random = new Random();
 
-         nextvec = new Vector<>();
+         nextvec = new Vector<>(100);
          nextvec.add(0);
          nextvec.add(0);
          nextvec.add(0);
@@ -212,8 +223,6 @@ public class client {
 
          if (collides(currentPiece, pieceRow + 1, pieceCol)) {
             isRunning = false;
-            player1.resetBoard();
-            player2.resetBoard();
          }
       }
 
