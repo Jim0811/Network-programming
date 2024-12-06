@@ -4,12 +4,18 @@ import java.io.*;
 import java.net.*;
 import java.util.Random;
 import java.util.Vector;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 
 public class client {
+   int bbuffer = 25;
    int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 25;
-   static int TILE_SIZE = 25;
+   static int TILE_SIZE = 20;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
@@ -25,8 +31,13 @@ public class client {
    DataOutputStream outstream;
    DataInputStream instream;
 
+   static Clip clip, clip2;
+
    @SuppressWarnings("CallToPrintStackTrace")
    public client(String servername, int port) {
+
+      playSound("bg.wav");
+
       isRunning = false;
 
       gamePanel = new JPanel() {
@@ -40,7 +51,12 @@ public class client {
                im = new ImageIcon("tetris.png").getImage();
                g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
 
-               g.drawString("Press P to Pause / Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
+               im = new ImageIcon("c.png").getImage();
+               g.drawImage(im, 5 * TILE_SIZE, 5 * TILE_SIZE, 10 * TILE_SIZE, 3 * TILE_SIZE, null);
+
+               im = new ImageIcon("rule.png").getImage();
+               g.drawImage(im, 0 * TILE_SIZE, 10 * TILE_SIZE, 20 * TILE_SIZE, 10 * TILE_SIZE, null);
+
             } else {
 
                im = new ImageIcon("tetris.png").getImage();
@@ -73,10 +89,12 @@ public class client {
          }
       });
 
-      player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
-      player2 = new PlayerBoard(1, KeyEvent.VK_J, KeyEvent.VK_L, KeyEvent.VK_I, KeyEvent.VK_K);
+      player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_Q,
+            KeyEvent.VK_E);
+      player2 = new PlayerBoard(1, KeyEvent.VK_J, KeyEvent.VK_L, KeyEvent.VK_I, KeyEvent.VK_K, KeyEvent.VK_U,
+            KeyEvent.VK_O);
 
-      timer = new Timer(300, e -> {
+      timer = new Timer(500, e -> {
          if (isRunning) {
             player1.update();
             player2.update();
@@ -127,13 +145,36 @@ public class client {
       }
    }
 
+   public static void playSound(String filePath) {
+      try {
+         File soundFile = new File(filePath);
+         AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
+         clip = AudioSystem.getClip();
+         clip.open(audioStream);
+         clip.start();
+         clip.loop(Clip.LOOP_CONTINUOUSLY);
+      } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ignored) {
+      }
+   }
+
+   public static void playSound2(String filePath) {
+      try {
+         File soundFile2 = new File(filePath);
+         AudioInputStream audioStream2 = AudioSystem.getAudioInputStream(soundFile2);
+         clip2 = AudioSystem.getClip();
+         clip2.open(audioStream2);
+         clip2.start();
+      } catch (UnsupportedAudioFileException | IOException | LineUnavailableException ignored) {
+      }
+   }
+
    public JPanel getPanel() {
       return gamePanel;
    }
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
-      frame.setLocation(350, 10);
+      // frame.setLocation(350, 10);
       client game = new client("localhost", 1234);
       frame.add(game.getPanel());
       frame.pack();
@@ -176,9 +217,13 @@ public class client {
       int rightKey;
       int rotateKey;
       int downKey;
+      int qkey, ekey;
       Image blueImage;
       Image violetImage;
       Image redImage;
+
+      int nowp;
+      boolean holded;
 
       Vector<Integer> nextvec;
 
@@ -186,12 +231,14 @@ public class client {
 
       Image I;
 
-      public PlayerBoard(int offsetX, int leftKey, int rightKey, int rotateKey, int downKey) {
+      public PlayerBoard(int offsetX, int leftKey, int rightKey, int rotateKey, int downKey, int qkey, int ekey) {
          this.offsetX = offsetX;
          this.leftKey = leftKey;
          this.rightKey = rightKey;
          this.rotateKey = rotateKey;
          this.downKey = downKey;
+         this.qkey = qkey;
+         this.ekey = ekey;
          blueImage = new ImageIcon("blue.png").getImage();
          redImage = new ImageIcon("red.png").getImage();
          violetImage = new ImageIcon("violet.png").getImage();
@@ -208,7 +255,7 @@ public class client {
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
       final void spawnNewPiece(int offsetX) {
-
+         holded = false;
          pieceRow = 0;
          pieceCol = BOARD_WIDTH / 2 - 5 + offsetX * 6;
 
@@ -221,6 +268,7 @@ public class client {
          }
 
          currentPiece = pieces[nextvec.get(0)];
+         nowp = nextvec.get(0);
          nextvec.remove(0);
          nextPiece = pieces[nextvec.get(0)];
 
@@ -260,10 +308,13 @@ public class client {
       }
 
       void placePiece() {
+
+         playSound2("stomp.wav");
+
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  board[pieceRow + r][pieceCol + c] = true;
+                  board[pieceRow + r][pieceCol + c] = true;////////////////////////////////////////////////////
                }
             }
          }
@@ -272,6 +323,7 @@ public class client {
       }
 
       void hardDrop() {
+
          while (!collides(currentPiece, pieceRow + 1, pieceCol)) {
             pieceRow++;
          }
@@ -279,6 +331,7 @@ public class client {
       }
 
       void clearRows() {
+
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             boolean fullRow = true;
             for (int c = 0; c < BOARD_WIDTH; c++) {
@@ -288,6 +341,8 @@ public class client {
                }
             }
             if (fullRow) {
+               playSound2("win.wav");
+
                for (int row = r; row > 0; row--) {
                   board[row] = board[row - 1];
                }
@@ -372,15 +427,32 @@ public class client {
          }
       }
 
+      public void hold() {
+         if (!holded) {
+            nextPiece = currentPiece;
+            currentPiece = pieces[nextvec.get(0)];
+            nextvec.set(0, nowp);
+            pieceRow = 0;
+            pieceCol = BOARD_WIDTH / 2 - 5 + offsetX * 6;
+
+         }
+         holded = true;
+      }
+
       public void handleKey(int keyCode) {
          if (keyCode == leftKey && !collides(currentPiece, pieceRow, pieceCol - 1)) {
             pieceCol--;
          } else if (keyCode == rightKey && !collides(currentPiece, pieceRow, pieceCol + 1)) {
             pieceCol++;
          } else if (keyCode == downKey && !collides(currentPiece, pieceRow + 1, pieceCol)) {
-            hardDrop();
+            pieceRow++;
          } else if (keyCode == rotateKey) {
             rotatePiece();
+         } else if (keyCode == qkey) {
+            hardDrop();
+
+         } else if (keyCode == ekey) {
+            hold();
          }
       }
    }
