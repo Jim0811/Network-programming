@@ -11,6 +11,7 @@ public class client {
    int BOARD_HEIGHT = 20;
    static int TILE_SIZE = 30;
    Timer timer;
+   int delay=250;
    PlayerBoard player1;
    PlayerBoard player2;
    boolean[][] board;
@@ -23,14 +24,22 @@ public class client {
    static ImageIcon I;
 
    JPanel gamePanel;
+   JLabel speedLabel;
+
    Socket socket;
    DataOutputStream outstream;
    DataInputStream instream;
 
    @SuppressWarnings("CallToPrintStackTrace")
-   public client(String servername, int port) {
+   public client(String servername, int port,JFrame frame) {
       isRunning = false;
       isGameOver = false;
+
+      speedLabel = new JLabel("Speed: " + (1000 / delay) + " moves/sec");
+      speedLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+      speedLabel.setForeground(Color.BLACK);
+      frame.add(speedLabel, BorderLayout.NORTH); // 将标签放在窗口顶部
+
       gamePanel = new JPanel() {
          @Override
          protected void paintComponent(Graphics g) {
@@ -58,6 +67,8 @@ public class client {
                y = (BOARD_HEIGHT * TILE_SIZE) / 2 + 120;
                g.drawString(resetString, x, y);
             } else if (!isRunning) {
+               
+
                g.setColor(Color.gray);
                g.setFont(new Font("Arial", Font.BOLD, 20));
                player1.draw(g, 0);
@@ -98,24 +109,33 @@ public class client {
             try {
                int keyCode = e.getKeyCode();
                if (keyCode == KeyEvent.VK_R && isGameOver) {
-                  player1.resetBoard();
-                  player2.resetBoard();
-                  isGameOver = false;
-                  isRunning = false;
+                     player1.resetBoard();
+                     player2.resetBoard();
+                     isGameOver = false;
+                     isRunning = false;
+               } else if (keyCode == KeyEvent.VK_PLUS || keyCode == KeyEvent.VK_EQUALS) { // 增加速度
+                     delay = Math.max(50, delay - 50); // 防止速度太快
+                     timer.setDelay(delay);
+                     speedLabel.setText("Speed: " + (1000 / delay) + " moves/sec");
+               } else if (keyCode == KeyEvent.VK_MINUS) { // 减少速度
+                     delay = Math.min(1000, delay + 50); // 防止速度太慢
+                     timer.setDelay(delay);
+                     speedLabel.setText("Speed: " + (1000 / delay) + " moves/sec");
                } else {
-                  outstream.writeInt(keyCode);
+                     outstream.writeInt(keyCode);
                }
             } catch (Exception e1) {
                e1.printStackTrace();
             }
          }
+
          
       });
 
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
       player2 = new PlayerBoard(1, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
 
-      timer = new Timer(250, e -> {
+      timer = new Timer(delay, e -> {
          if (isRunning) {
             player1.update();
             player2.update();
@@ -172,11 +192,12 @@ public class client {
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
-      client game = new client("localhost", 1234);
+      client game = new client("localhost", 1234,frame);
       frame.add(game.getPanel());
       frame.pack();
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       frame.setVisible(true);
+      frame.setLayout(new BorderLayout());
 
       L = new JLabel[401];
       for (int i = 0; i <= 400; i++) {
@@ -333,13 +354,15 @@ public class client {
                for (int c = 0; c < BOARD_WIDTH; c++) {
                   board[0][c] = false;
                }
-      
-               r++; // 繼續檢查同一行，因為方塊下移後可能形成新的完整行
+               delay = Math.max(50, delay - 100);
+               timer.setDelay(delay);
+               r++;
             }
          }
       
          // 根據清除的行數增加分數
          score += rowsCleared;
+         
       }
       
 
