@@ -11,29 +11,63 @@ public class client2 {
    int BOARD_HEIGHT = 20;
    static int TILE_SIZE = 30;
    Timer timer;
+   int delay = 250;
    PlayerBoard player1;
    PlayerBoard player2;
    boolean[][] board;
    boolean isRunning; // Game state variable
    boolean ismain;
+   boolean isGameOver;
+   private int score = 0;
    //
    static JLabel[] L;
    static ImageIcon I;
 
    JPanel gamePanel;
+   JLabel speedLabel;
+
    Socket socket;
    DataOutputStream outstream;
    DataInputStream instream;
 
    @SuppressWarnings("CallToPrintStackTrace")
-   public client2(String servername, int port) {
+   public client2(String servername, int port, JFrame frame) {
       isRunning = false;
+      isGameOver = false;
+
+      speedLabel = new JLabel("Speed: " + (1000 / delay) + " moves/sec");
+      speedLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+      speedLabel.setForeground(Color.BLACK);
+      frame.add(speedLabel, BorderLayout.NORTH); // 将标签放在窗口顶部
 
       gamePanel = new JPanel() {
          @Override
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            if (!isRunning) {
+            if (isGameOver) {
+               g.setColor(Color.red);
+               g.setFont(new Font("Arial", Font.BOLD, 40));
+
+               String gameOverText = "Game Over!";
+               FontMetrics fm = g.getFontMetrics();
+               int textWidth = fm.stringWidth(gameOverText);
+               int x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               int y = (BOARD_HEIGHT * TILE_SIZE) / 2 - 30;
+               g.drawString(gameOverText, x, y);
+
+               String scoreText = "Score: " + score;
+               textWidth = fm.stringWidth(scoreText);
+               x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               y = (BOARD_HEIGHT * TILE_SIZE) / 2 + 30;
+               g.drawString(scoreText, x, y);
+
+               String resetString = "Press R to play again";
+               textWidth = fm.stringWidth(resetString);
+               x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               y = (BOARD_HEIGHT * TILE_SIZE) / 2 + 120;
+               g.drawString(resetString, x, y);
+            } else if (!isRunning) {
+
                g.setColor(Color.gray);
                g.setFont(new Font("Arial", Font.BOLD, 20));
                player1.draw(g, 0);
@@ -42,7 +76,19 @@ public class client2 {
             } else {
                player1.draw(g, 0);
                player2.draw(g, 1);
+               player1.drawNextPiece(g, 0, 0, 0);
+               player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1);
 
+               g.setColor(Color.LIGHT_GRAY);
+               g.setFont(new Font("Arial", Font.PLAIN, 30));
+
+               String scoreText = "Score: " + score;
+               FontMetrics fm = g.getFontMetrics();
+               int textWidth = fm.stringWidth(scoreText);
+               int x = (BOARD_WIDTH * TILE_SIZE - textWidth) / 2;
+               int y = (BOARD_HEIGHT * TILE_SIZE) / 2;
+
+               g.drawString(scoreText, x, y);
             }
 
             player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
@@ -59,20 +105,35 @@ public class client2 {
          @Override
          @SuppressWarnings({ "UseSpecificCatch", "CallToPrintStackTrace" })
          public void keyPressed(KeyEvent e) {
-
             try {
-               outstream.writeInt(e.getKeyCode());
+               int keyCode = e.getKeyCode();
+               if (keyCode == KeyEvent.VK_R && isGameOver) {
+                  player1.resetBoard();
+                  player2.resetBoard();
+                  isGameOver = false;
+                  isRunning = false;
+               } else if (keyCode == KeyEvent.VK_PLUS || keyCode == KeyEvent.VK_EQUALS) { // 增加速度
+                  delay = Math.max(50, delay - 50); // 防止速度太快
+                  timer.setDelay(delay);
+                  speedLabel.setText("Speed: " + (1000 / delay) + " moves/sec");
+               } else if (keyCode == KeyEvent.VK_MINUS) { // 减少速度
+                  delay = Math.min(1000, delay + 50); // 防止速度太慢
+                  timer.setDelay(delay);
+                  speedLabel.setText("Speed: " + (1000 / delay) + " moves/sec");
+               } else {
+                  outstream.writeInt(keyCode);
+               }
             } catch (Exception e1) {
                e1.printStackTrace();
             }
-
          }
+
       });
 
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
       player2 = new PlayerBoard(1, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_DOWN);
 
-      timer = new Timer(250, e -> {
+      timer = new Timer(delay, e -> {
          if (isRunning) {
             player1.update();
             player2.update();
@@ -129,11 +190,12 @@ public class client2 {
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
-      client2 game = new client2("localhost", 1234);
+      client2 game = new client2("localhost", 1234, frame);
       frame.add(game.getPanel());
       frame.pack();
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       frame.setVisible(true);
+      frame.setLayout(new BorderLayout());
 
       L = new JLabel[401];
       for (int i = 0; i <= 400; i++) {
@@ -194,14 +256,12 @@ public class client2 {
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
       final void spawnNewPiece(int offsetX) {
-
          pieceRow = 0;
          pieceCol = BOARD_WIDTH / 2 - 5 + offsetX * 6;
 
          int rando = random.nextInt(pieces.length) + pieces.length * offsetX;
          try {
             outstream.writeInt(rando);
-
          } catch (Exception e1) {
             e1.printStackTrace();
          }
@@ -210,10 +270,10 @@ public class client2 {
          nextvec.remove(0);
          nextPiece = pieces[nextvec.get(0)];
 
-         if (collides(currentPiece, pieceRow + 1, pieceCol)) {
-            isRunning = false;
-            player1.resetBoard();
-            player2.resetBoard();
+         // 如果新方塊出現時就已經碰撞，遊戲結束
+         if (collides(currentPiece, pieceRow, pieceCol)) {
+            isGameOver = true;
+            isRunning = false; // 停止遊戲
          }
       }
 
@@ -266,22 +326,40 @@ public class client2 {
          placePiece();
       }
 
-      void clearRows() {
-         for (int r = 0; r < BOARD_HEIGHT; r++) {
+      private void clearRows() {
+         int rowsCleared = 0;
+
+         for (int r = BOARD_HEIGHT - 1; r >= 0; r--) {
             boolean fullRow = true;
+
             for (int c = 0; c < BOARD_WIDTH; c++) {
                if (!board[r][c]) {
                   fullRow = false;
                   break;
                }
             }
+
             if (fullRow) {
-               for (int row = r; row > 0; row--) {
-                  board[row] = board[row - 1];
+               rowsCleared++;
+               // 將該行以上的方塊下移
+               for (int r2 = r; r2 > 0; r2--) {
+                  for (int c = 0; c < BOARD_WIDTH; c++) {
+                     board[r2][c] = board[r2 - 1][c];
+                  }
                }
-               board[0] = new boolean[BOARD_WIDTH];
+               // 最上面的一行清空
+               for (int c = 0; c < BOARD_WIDTH; c++) {
+                  board[0][c] = false;
+               }
+               delay = Math.max(50, delay - 100);
+               timer.setDelay(delay);
+               r++;
             }
          }
+
+         // 根據清除的行數增加分數
+         score += rowsCleared;
+
       }
 
       public void resetBoard() {
@@ -291,6 +369,9 @@ public class client2 {
             }
          }
          spawnNewPiece(offsetX);
+         isGameOver = false;
+         isRunning = false;
+         score = 0;
       }
 
       public void update() {

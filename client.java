@@ -8,8 +8,8 @@ import javax.swing.*;
 
 public class client {
    int BOARD_WIDTH = 20;
-   int BOARD_HEIGHT = 20;
-   static int TILE_SIZE = 30;
+   int BOARD_HEIGHT = 25;
+   static int TILE_SIZE = 25;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
@@ -40,7 +40,7 @@ public class client {
                im = new ImageIcon("tetris.png").getImage();
                g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
 
-               g.drawString("  Press P to Pause / Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
+               g.drawString("Press P to Pause / Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
             } else {
 
                im = new ImageIcon("tetris.png").getImage();
@@ -57,7 +57,6 @@ public class client {
       };
 
       gamePanel.setPreferredSize(new Dimension(BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE));
-      gamePanel.setBackground(Color.white);
       gamePanel.setFocusable(true);
 
       gamePanel.addKeyListener(new KeyAdapter() {
@@ -77,7 +76,7 @@ public class client {
       player1 = new PlayerBoard(0, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_S);
       player2 = new PlayerBoard(1, KeyEvent.VK_J, KeyEvent.VK_L, KeyEvent.VK_I, KeyEvent.VK_K);
 
-      timer = new Timer(250, e -> {
+      timer = new Timer(300, e -> {
          if (isRunning) {
             player1.update();
             player2.update();
@@ -134,6 +133,7 @@ public class client {
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
+      frame.setLocation(350, 10);
       client game = new client("localhost", 1234);
       frame.add(game.getPanel());
       frame.pack();
