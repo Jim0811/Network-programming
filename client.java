@@ -43,7 +43,7 @@ public class client {
                g.drawString("  Press P to Pause / Unpause", BOARD_WIDTH * TILE_SIZE / 4, BOARD_HEIGHT * TILE_SIZE / 2);
             } else {
 
-               im = new ImageIcon("fly1.GIF").getImage();
+               im = new ImageIcon("tetris.png").getImage();
                g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
                player1.draw(g, 0);
                player2.draw(g, 1);
