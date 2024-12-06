@@ -12,10 +12,13 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 
 public class client {
-   int bbuffer = 25;
+   boolean dieeee;
+   boolean firsts;
    int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 25;
    static int TILE_SIZE = 20;
+
+   int speed = 500;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
@@ -25,6 +28,7 @@ public class client {
    static JLabel[] L;
    static ImageIcon I;
    static Image im;
+   int counter = 0;
 
    JPanel gamePanel;
    Socket socket;
@@ -39,28 +43,71 @@ public class client {
       playSound("bg.wav");
 
       isRunning = false;
+      firsts = true;
+      dieeee = false;
 
       gamePanel = new JPanel() {
          @Override
          protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             if (!isRunning) {
-               g.setColor(Color.black);
-               g.setFont(new Font("Arial", Font.BOLD, 20));
 
-               im = new ImageIcon("tetris.png").getImage();
-               g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
+               if (firsts) {
+                  im = new ImageIcon("tetris.png").getImage();
+                  g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
 
-               im = new ImageIcon("c.png").getImage();
-               g.drawImage(im, 5 * TILE_SIZE, 5 * TILE_SIZE, 10 * TILE_SIZE, 3 * TILE_SIZE, null);
+                  im = new ImageIcon("bob.png").getImage();
+                  g.drawImage(im, 4 * TILE_SIZE, (18 - (speed * 2 / 125)) * TILE_SIZE, 2 * TILE_SIZE, 2 * TILE_SIZE,
+                        null);
 
-               im = new ImageIcon("rule.png").getImage();
-               g.drawImage(im, 0 * TILE_SIZE, 10 * TILE_SIZE, 20 * TILE_SIZE, 10 * TILE_SIZE, null);
+                  im = new ImageIcon("c.png").getImage();
+                  g.drawImage(im, 5 * TILE_SIZE, 5 * TILE_SIZE, 10 * TILE_SIZE, 3 * TILE_SIZE, null);
 
+                  im = new ImageIcon("select.png").getImage();
+                  g.drawImage(im, 5 * TILE_SIZE, 10 * TILE_SIZE, 10 * TILE_SIZE, 9 * TILE_SIZE, null);
+
+               } else {
+
+                  if (dieeee) {
+                     im = new ImageIcon("tetris.png").getImage();
+                     g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
+
+                     g.setColor(Color.white);
+                     g.setFont(new Font("Arial", Font.BOLD, 20));
+                     g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE);
+
+                     player1.draw(g, 0);
+                     player2.draw(g, 1);
+
+                     im = new ImageIcon("go.png").getImage();
+                     g.drawImage(im, 5 * TILE_SIZE, 10 * TILE_SIZE, 10 * TILE_SIZE, 3 * TILE_SIZE, null);
+
+                  } else {
+                     im = new ImageIcon("tetris.png").getImage();
+                     g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
+
+                     g.setColor(Color.white);
+                     g.setFont(new Font("Arial", Font.BOLD, 20));
+                     g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE);
+
+                     player1.draw(g, 0);
+                     player2.draw(g, 1);
+
+                     player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
+                     player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1); //
+
+                     im = new ImageIcon("rule.png").getImage();
+                     g.drawImage(im, 0 * TILE_SIZE, 10 * TILE_SIZE, 20 * TILE_SIZE, 10 * TILE_SIZE, null);
+                  }
+               }
             } else {
 
                im = new ImageIcon("tetris.png").getImage();
                g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
+
+               g.setColor(Color.white);
+               g.setFont(new Font("Arial", Font.BOLD, 20));
+               g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE);
                player1.draw(g, 0);
                player2.draw(g, 1);
 
@@ -94,7 +141,7 @@ public class client {
       player2 = new PlayerBoard(1, KeyEvent.VK_J, KeyEvent.VK_L, KeyEvent.VK_I, KeyEvent.VK_K, KeyEvent.VK_U,
             KeyEvent.VK_O);
 
-      timer = new Timer(500, e -> {
+      timer = new Timer(speed, e -> {
          if (isRunning) {
             player1.update();
             player2.update();
@@ -113,13 +160,32 @@ public class client {
                try {
                   int i = instream.readInt();
                   System.out.println(i);
-                  if (i == KeyEvent.VK_R) {
+                  if (i == KeyEvent.VK_T) {
                      player1.resetBoard();
                      player2.resetBoard();
 
+                     firsts = true;
+                     isRunning = false;
+                     dieeee = false;
+
                   } else if (i == KeyEvent.VK_P) {
+                     firsts = false;
 
                      isRunning = !isRunning;
+
+                  } else if (i == KeyEvent.VK_EQUALS) {
+                     speed = speed - 125;
+                     if (speed < 125) {
+                        speed = 125;
+                     }
+                     timer.setDelay(speed);
+
+                  } else if (i == KeyEvent.VK_MINUS) {
+                     speed = speed + 125;
+                     if (speed > 500) {
+                        speed = 500;
+                     }
+                     timer.setDelay(speed);
 
                   } else if (i < pieces.length * 2 & i >= 0) {
                      if (i < pieces.length) {
@@ -191,22 +257,28 @@ public class client {
    }
 
    int[][][] pieces = {
-         { { 1, 1, 1 } },
          { { 1 } },
          { { 1, 1 } },
+         { { 1, 1, 1 } },
+         { { 1, 1, 1, 1, 1 } },
          { { 1, 1 }, { 1, 0 } },
-
-         { { 1, 1, 1, 1, 1 } }, { { 1, 1, 1 }, { 1, 0, 1 } }, { { 1, 1, 1 }, { 1, 1, 0 } },
-         { { 1, 1, 1 }, { 0, 1, 1 } }, { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } }, { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
-         { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } }, { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
-         { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } }, { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
-         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } }, { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
-         { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } }, { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
-
+         { { 1, 1, 1 }, { 1, 0, 1 } },
+         { { 1, 1, 1 }, { 1, 1, 0 } },
+         { { 1, 1, 1 }, { 0, 1, 1 } },
+         { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } },
+         { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
+         { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } },
+         { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
          { { 1, 1, 1, 1 }, { 0, 1, 0, 0 } },
          { { 1, 1, 1, 1 }, { 0, 0, 1, 0 } },
-
-         { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } }, { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } }, };
+         { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } },
+         { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+         { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } },
+         { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
+         { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
+         { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } }, };
 
    class PlayerBoard {
       int[][] currentPiece;
@@ -274,6 +346,7 @@ public class client {
 
          if (collides(currentPiece, pieceRow + 1, pieceCol)) {
             isRunning = false;
+            dieeee = true;
          }
       }
 
@@ -342,6 +415,7 @@ public class client {
             }
             if (fullRow) {
                playSound2("win.wav");
+               counter++;
 
                for (int row = r; row > 0; row--) {
                   board[row] = board[row - 1];
@@ -352,6 +426,7 @@ public class client {
       }
 
       public void resetBoard() {
+         counter = 0;
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             for (int c = 0; c < BOARD_WIDTH; c++) {
                board[r][c] = false;
