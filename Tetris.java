@@ -4,7 +4,7 @@ import java.util.Random;
 import javax.swing.*;
 
 public final class Tetris extends JPanel implements ActionListener, KeyListener {
-    final int BOARD_WIDTH = 20;
+    final int BOARD_WIDTH = 10;
     final int BOARD_HEIGHT = 20;
     final int TILE_SIZE = 30;
     Timer timer;
@@ -34,28 +34,11 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
 
     int[][] getRandomPiece() {
         int[][][] pieces = {
-                { { 1, 1, 1, 1, 1 } },
-
-                { { 1, 1, 1 }, { 1, 0, 1 } },
-                { { 1, 1, 1 }, { 1, 1, 0 } },
-                { { 1, 1, 1 }, { 0, 1, 1 } },
-
-                { { 1, 1, 1, 1 }, { 1, 0, 0, 0 } },
-                { { 1, 1, 1, 1 }, { 0, 0, 0, 1 } },
-                { { 1, 1, 1, 0 }, { 0, 0, 1, 1 } },
-                { { 0, 1, 1, 1 }, { 1, 1, 0, 0 } },
-
-                { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } },
-                { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 } },
-                { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 1, 0 } },
-
-                { { 0, 1, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
-                { { 0, 1, 0 }, { 1, 1, 1 }, { 1, 0, 0 } },
-
-                { { 0, 0, 1 }, { 1, 1, 1 }, { 1, 0, 0 } },
-                { { 1, 0, 0 }, { 1, 1, 1 }, { 0, 0, 1 } },
-
-                { { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 1 } },
+                { { 1, 1, 1, 1 } },
+                { { 1, 1, 1 }, { 0, 1, 0 } },
+                { { 1, 1, 1 }, { 1, 0, 0 } },
+                { { 1, 1 }, { 1, 1, } },
+                { { 1, 1, 0 }, { 0, 1, 1, } },
 
         };
         return pieces[random.nextInt(pieces.length)];
@@ -143,11 +126,20 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
         super.paintComponent(g);
 
         // Draw the current piece
-        g.setColor(Color.RED);
+        g.setColor(Color.white);
         for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                 if (currentPiece[r][c] == 1) {
                     g.fillRect((pieceCol + c) * TILE_SIZE, (pieceRow + r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+            }
+        }
+
+        g.setColor(Color.white);
+        for (int r = 0; r < board.length; r++) {
+            for (int c = 0; c < board[r].length; c++) {
+                if (board[r][c]) {
+                    g.fillRect((c) * TILE_SIZE, (r) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
             }
         }
@@ -169,7 +161,7 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
             }
             case KeyEvent.VK_DOWN -> {
                 if (!collides(currentPiece, pieceRow + 1, pieceCol)) {
-                    hardDrop();
+                    pieceRow++;
                 }
             }
             case KeyEvent.VK_UP -> rotatePiece();

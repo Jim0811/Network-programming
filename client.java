@@ -32,7 +32,7 @@ public class client {
 
    JPanel gamePanel;
    Socket socket;
-   DataOutputStream outstream;
+   static DataOutputStream outstream;
    DataInputStream instream;
 
    static Clip clip, clip2;
@@ -72,12 +72,11 @@ public class client {
                      im = new ImageIcon("tetris.png").getImage();
                      g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
 
-                     g.setColor(Color.white);
-                     g.setFont(new Font("Arial", Font.BOLD, 20));
-                     g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE);
-
                      player1.draw(g, 0);
                      player2.draw(g, 1);
+                     g.setColor(Color.white);
+                     g.setFont(new Font("Arial", Font.BOLD, 20));
+                     g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE * 13);
 
                      im = new ImageIcon("go.png").getImage();
                      g.drawImage(im, 5 * TILE_SIZE, 10 * TILE_SIZE, 10 * TILE_SIZE, 3 * TILE_SIZE, null);
@@ -105,11 +104,11 @@ public class client {
                im = new ImageIcon("tetris.png").getImage();
                g.drawImage(im, 0, 0, BOARD_WIDTH * TILE_SIZE, BOARD_HEIGHT * TILE_SIZE, null);
 
+               player1.draw(g, 0);
+               player2.draw(g, 1);
                g.setColor(Color.white);
                g.setFont(new Font("Arial", Font.BOLD, 20));
                g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE);
-               player1.draw(g, 0);
-               player2.draw(g, 1);
 
                player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
                player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1); //
@@ -322,11 +321,12 @@ public class client {
          nextvec.add(0);
          nextvec.add(0);
          nextvec.add(0);
-         spawnNewPiece(this.offsetX);
+         spawnNewPiece();
+
       }
 
       @SuppressWarnings({ "CallToPrintStackTrace", "UseSpecificCatch" })
-      final void spawnNewPiece(int offsetX) {
+      final void spawnNewPiece() {
          holded = false;
          pieceRow = 0;
          pieceCol = BOARD_WIDTH / 2 - 5 + offsetX * 6;
@@ -387,15 +387,20 @@ public class client {
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
-                  board[pieceRow + r][pieceCol + c] = true;////////////////////////////////////////////////////
+                  try {
+                     board[pieceRow + r][pieceCol + c] = true;
+
+                  } catch (Exception e) {
+                  }
                }
             }
          }
          clearRows();
-         spawnNewPiece(offsetX);
+         spawnNewPiece();
       }
 
       void hardDrop() {
+         counter += 1 * (5 - speed / 125);
 
          while (!collides(currentPiece, pieceRow + 1, pieceCol)) {
             pieceRow++;
@@ -415,7 +420,7 @@ public class client {
             }
             if (fullRow) {
                playSound2("win.wav");
-               counter++;
+               counter += 10 * (5 - speed / 125);
 
                for (int row = r; row > 0; row--) {
                   board[row] = board[row - 1];
@@ -432,7 +437,7 @@ public class client {
                board[r][c] = false;
             }
          }
-         spawnNewPiece(offsetX);
+         spawnNewPiece();
       }
 
       public void update() {
