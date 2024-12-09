@@ -160,12 +160,24 @@ public class client {
                   int i = instream.readInt();
                   System.out.println(i);
                   if (i == KeyEvent.VK_T) {
+
                      player1.resetBoard();
                      player2.resetBoard();
 
                      firsts = true;
                      isRunning = false;
                      dieeee = false;
+
+                  } else if (i == KeyEvent.VK_R) {
+                     player1.nextvec = new Vector<>();
+                     player1.nextvec.add(0);
+                     player1.nextvec.add(0);
+                     player1.nextvec.add(0);
+
+                     player2.nextvec = new Vector<>();
+                     player2.nextvec.add(0);
+                     player2.nextvec.add(0);
+                     player2.nextvec.add(0);
 
                   } else if (i == KeyEvent.VK_P) {
                      firsts = false;
@@ -239,8 +251,9 @@ public class client {
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
-      // frame.setLocation(350, 10);
-      client game = new client("localhost", 1234);
+      client game = new client("192.168.56.1", 1234);// ether
+      // client game = new client("192.168.77.91", 1234);// wifi
+
       frame.add(game.getPanel());
       frame.pack();
       frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -317,7 +330,7 @@ public class client {
          board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
          random = new Random();
 
-         nextvec = new Vector<>(100);
+         nextvec = new Vector<>();
          nextvec.add(0);
          nextvec.add(0);
          nextvec.add(0);
@@ -334,7 +347,6 @@ public class client {
          int rando = random.nextInt(pieces.length) + pieces.length * offsetX;
          try {
             outstream.writeInt(rando);
-
          } catch (Exception e1) {
             e1.printStackTrace();
          }
