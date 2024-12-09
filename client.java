@@ -64,7 +64,7 @@ public class client {
                   g.drawImage(im, 5 * TILE_SIZE, 5 * TILE_SIZE, 10 * TILE_SIZE, 3 * TILE_SIZE, null);
 
                   im = new ImageIcon("select.png").getImage();
-                  g.drawImage(im, 5 * TILE_SIZE, 10 * TILE_SIZE, 10 * TILE_SIZE, 9 * TILE_SIZE, null);
+                  g.drawImage(im, 5 * TILE_SIZE, 10 * TILE_SIZE, 10 * TILE_SIZE, 8 * TILE_SIZE + TILE_SIZE / 2, null);
 
                } else {
 
