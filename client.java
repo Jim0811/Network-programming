@@ -159,16 +159,23 @@ public class client {
                try {
                   int i = instream.readInt();
                   System.out.println(i);
-                  if (i == KeyEvent.VK_T) {
+                  if (i == KeyEvent.VK_B) {
 
                      player1.resetBoard();
                      player2.resetBoard();
-
+                     player1.spawnNewPiece();
+                     player2.spawnNewPiece();
                      firsts = true;
                      isRunning = false;
                      dieeee = false;
 
-                  } else if (i == KeyEvent.VK_R) {
+                  } else if (i == KeyEvent.VK_C) {
+
+                     player1.clearanyway();
+
+                  } else if (i == KeyEvent.VK_V) {
+
+                     counter -= 30 * (5 - speed / 125);
                      player1.nextvec = new Vector<>();
                      player1.nextvec.add(0);
                      player1.nextvec.add(0);
@@ -442,6 +449,15 @@ public class client {
          }
       }
 
+      public void clearanyway() {
+         counter -= 10 * (5 - speed / 125);
+
+         for (int row = BOARD_HEIGHT - 1; row > 0; row--) {
+            board[row] = board[row - 1];
+         }
+         board[0] = new boolean[BOARD_WIDTH];
+      }
+
       public void resetBoard() {
          counter = 0;
          for (int r = 0; r < BOARD_HEIGHT; r++) {
@@ -449,7 +465,6 @@ public class client {
                board[r][c] = false;
             }
          }
-         spawnNewPiece();
       }
 
       public void update() {
