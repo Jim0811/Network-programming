@@ -15,7 +15,7 @@ public class client {
    boolean dieeee;
    boolean firsts;
    boolean firsts0;
-
+   static String internet = "localhost";
    int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 25;
    static int TILE_SIZE = 25;
@@ -295,7 +295,7 @@ public class client {
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
-      client game = new client("192.168.1.108", 1234);// internet
+      client game = new client(internet, 1234);
 
       frame.add(game.getPanel());
       frame.pack();
