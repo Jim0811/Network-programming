@@ -14,17 +14,18 @@ import javax.swing.*;
 public class client {
    boolean dieeee;
    boolean firsts;
+   boolean firsts0;
+
    int BOARD_WIDTH = 20;
    int BOARD_HEIGHT = 25;
-   static int TILE_SIZE = 20;
+   static int TILE_SIZE = 25;
 
    int speed = 500;
    Timer timer;
    PlayerBoard player1;
    PlayerBoard player2;
    boolean[][] board;
-   boolean isRunning; // Game state variable
-   //
+   boolean isRunning;
    static JLabel[] L;
    static ImageIcon I;
    static Image im;
@@ -43,6 +44,7 @@ public class client {
       playSound("bg.wav");
 
       isRunning = false;
+      firsts0 = true;
       firsts = true;
       dieeee = false;
 
@@ -92,8 +94,8 @@ public class client {
                      player1.draw(g, 0);
                      player2.draw(g, 1);
 
-                     player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
-                     player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1); //
+                     player1.drawNextPiece(g, 0, 0, 0);
+                     player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1);
 
                      im = new ImageIcon("rule.png").getImage();
                      g.drawImage(im, 0 * TILE_SIZE, 10 * TILE_SIZE, 20 * TILE_SIZE, 10 * TILE_SIZE, null);
@@ -110,8 +112,8 @@ public class client {
                g.setFont(new Font("Arial", Font.BOLD, 20));
                g.drawString("score: " + counter, TILE_SIZE * 8, TILE_SIZE);
 
-               player1.drawNextPiece(g, 0, 0, 0); // Adjust (x, y) as needed for position
-               player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1); //
+               player1.drawNextPiece(g, 0, 0, 0);
+               player2.drawNextPiece(g, BOARD_WIDTH - player2.nextPiece[0].length, 0, 1);
 
             }
 
@@ -186,7 +188,42 @@ public class client {
                      player2.nextvec.add(0);
                      player2.nextvec.add(0);
 
+                     player1.spawnNewPiece();
+                     player2.spawnNewPiece();
+
                   } else if (i == KeyEvent.VK_P) {
+
+                     if (firsts0) {
+                        player1.nextvec = new Vector<>();
+                        player1.nextvec.add(5);
+                        player1.nextvec.add(6);
+                        player1.nextvec.add(7);
+                        player1.nextvec.add(8);
+
+                        player2.nextvec = new Vector<>();
+                        player2.nextvec.add(8);
+                        player2.nextvec.add(9);
+                        player2.nextvec.add(10);
+                        player2.nextvec.add(11);
+
+                        player1.resetBoard();
+                        player2.resetBoard();
+                        player1.spawnNewPiece();
+                        player2.spawnNewPiece();
+
+                     }
+
+                     if (dieeee) {
+                        player1.resetBoard();
+                        player2.resetBoard();
+                        player1.spawnNewPiece();
+                        player2.spawnNewPiece();
+                        firsts = true;
+                        isRunning = false;
+                        dieeee = false;
+                     }
+                     firsts0 = false;
+
                      firsts = false;
 
                      isRunning = !isRunning;
@@ -258,8 +295,7 @@ public class client {
 
    public static void main(String[] args) {
       JFrame frame = new JFrame();
-      client game = new client("192.168.56.1", 1234);// ether
-      // client game = new client("192.168.77.91", 1234);// wifi
+      client game = new client("192.168.1.108", 1234);// internet
 
       frame.add(game.getPanel());
       frame.pack();
@@ -276,6 +312,7 @@ public class client {
    }
 
    int[][][] pieces = {
+
          { { 1 } },
          { { 1, 1 } },
          { { 1, 1, 1 } },
@@ -318,7 +355,7 @@ public class client {
 
       Vector<Integer> nextvec;
 
-      int[][] nextPiece; // Add next piece array
+      int[][] nextPiece;
 
       Image I;
 
@@ -407,7 +444,8 @@ public class client {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {
                   try {
-                     board[pieceRow + r][pieceCol + c] = true;
+                     if (pieceRow != 0)
+                        board[pieceRow + r][pieceCol + c] = true;
 
                   } catch (Exception e) {
                   }
@@ -477,7 +515,7 @@ public class client {
       }
 
       public void drawNextPiece(Graphics g, int x, int y, int color) {
-         // Draw next piece at the specified position
+
          for (int r = 0; r < nextPiece.length; r++) {
             for (int c = 0; c < nextPiece[r].length; c++) {
                if (nextPiece[r][c] == 1) {
@@ -493,7 +531,6 @@ public class client {
       }
 
       public void draw(Graphics g, int color) {
-         // 绘制已有的方块（以原样显示为图片）
 
          for (int r = 0; r < BOARD_HEIGHT; r++) {
             for (int c = 0; c < BOARD_WIDTH; c++) {
@@ -523,7 +560,6 @@ public class client {
                }
             }
          }
-         // 绘制当前的方块
          for (int r = 0; r < currentPiece.length; r++) {
             for (int c = 0; c < currentPiece[r].length; c++) {
                if (currentPiece[r][c] == 1) {

@@ -22,7 +22,7 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
         board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
         random = new Random();
         spawnNewPiece();
-        timer = new Timer(250, this);
+        timer = new Timer(500, this);
         timer.start();
     }
 
@@ -56,13 +56,6 @@ public final class Tetris extends JPanel implements ActionListener, KeyListener 
         if (!collides(rotated, pieceRow, pieceCol)) {
             currentPiece = rotated;
         }
-    }
-
-    void hardDrop() {
-        while (!collides(currentPiece, pieceRow + 1, pieceCol)) {
-            pieceRow++;
-        }
-        placePiece();
     }
 
     boolean collides(int[][] piece, int newRow, int newCol) {
